@@ -3,6 +3,7 @@ from enum import Enum
 import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+
 class LogLevel(Enum):
     DEBUG = logging.DEBUG
     INFO = logging.INFO

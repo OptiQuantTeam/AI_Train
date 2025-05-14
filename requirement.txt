@@ -98,3 +98,6 @@ webcolors==24.11.1
 webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.13
+gym==0.26.2
+gym-notices==0.0.8
+gymnasium==1.0.0
