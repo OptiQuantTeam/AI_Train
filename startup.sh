@@ -48,13 +48,6 @@ log_message "AI_Lambda/model 디렉토리 내 기존 파일 삭제 완료"
 cp -r saved_model/* AI_Lambda/model/
 log_message "모델 파일 복사 완료"
 
-# AI_Train 레포지토리 변경사항 커밋 및 푸시
-if git add . && git commit -m "Update training results" && git push origin master; then
-    log_message "AI_Train 레포지토리 변경사항이 성공적으로 업로드되었습니다."
-else
-    log_message "AI_Train 레포지토리 Git 작업 중 오류가 발생했습니다."
-    exit 1
-fi
 
 # AI_Lambda 디렉토리로 이동
 cd AI_Lambda
@@ -67,5 +60,18 @@ if git add . && git commit -m "Update model files" && git push origin master; th
     #sudo shutdown -h now
 else
     log_message "AI_Lambda 레포지토리 Git 작업 중 오류가 발생했습니다."
+    exit 1
+fi
+
+cd ..
+# 기존 파일 삭제 (숨김 파일 포함)
+rm -rf AI_Lambda/[!.]*
+log_message "AI_Lambda 디렉토리 내 모든 파일(숨김 파일 포함) 삭제 완료"
+
+# AI_Train 레포지토리 변경사항 커밋 및 푸시
+if git add . && git commit -m "Update training results" && git push origin master; then
+    log_message "AI_Train 레포지토리 변경사항이 성공적으로 업로드되었습니다."
+else
+    log_message "AI_Train 레포지토리 Git 작업 중 오류가 발생했습니다."
     exit 1
 fi
