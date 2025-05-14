@@ -63,9 +63,9 @@ else
     exit 1
 fi
 
+rm -rf .[!.]*
 cd ..
-# 기존 파일 삭제 (숨김 파일 포함)
-rm -rf AI_Lambda/[!.]*
+rm -rf AI_Lambda/
 log_message "AI_Lambda 디렉토리 내 모든 파일(숨김 파일 포함) 삭제 완료"
 
 # AI_Train 레포지토리 변경사항 커밋 및 푸시
