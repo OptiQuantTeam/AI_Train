@@ -48,6 +48,16 @@ log_message "AI_Lambda/model 디렉토리 내 기존 파일 삭제 완료"
 # 학습된 모델 파일을 AI_Lambda/model 디렉토리로 복사
 cp -r saved_model/* AI_Lambda/model/
 cp -r saved_model/metadata/* output/metadata/
+
+# model 디렉토리의 파일 목록을 로그에 기록
+log_message "AI_Lambda/model 디렉토리 파일 목록:"
+for file in AI_Lambda/model/*; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        log_message "- $filename"
+    fi
+done
+
 log_message "모델 파일 복사 완료"
 
 
