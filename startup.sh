@@ -43,11 +43,32 @@ log_message "AI 학습 완료"
 # model 디렉토리 생성 및 기존 파일 삭제
 mkdir -p AI_Lambda/model
 rm -rf AI_Lambda/model/*
+log_message "AI_Lambda/model 삭제 후 디렉토리 파일 목록:"
+for file in AI_Lambda/model/*; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        log_message "- $filename"
+    fi
+done
 log_message "AI_Lambda/model 디렉토리 내 기존 파일 삭제 완료"
 
-# 학습된 모델 파일을 AI_Lambda/model 디렉토리로 복사
-cp -r saved_model/* AI_Lambda/model/
-cp -r saved_model/metadata/* output/metadata/
+# 디렉토리 존재 확인 후 복사
+if [ -d "saved_model" ]; then
+    # 모델 파일 복사
+    if [ -d "saved_model/metadata" ]; then
+        cp -r saved_model/metadata/* output/metadata/
+        log_message "메타데이터 파일 복사 완료"
+    else
+        log_message "경고: saved_model/metadata 디렉토리가 존재하지 않습니다"
+    fi
+    
+    # 전체 모델 파일 복사
+    cp -r saved_model/* AI_Lambda/model/
+    log_message "모델 파일 복사 완료"
+else
+    log_message "오류: saved_model 디렉토리가 존재하지 않습니다"
+    exit 1
+fi
 
 # model 디렉토리의 파일 목록을 로그에 기록
 log_message "AI_Lambda/model 디렉토리 파일 목록:"
