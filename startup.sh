@@ -46,30 +46,9 @@ log_message "AI_Lambda/model 디렉토리 내 기존 파일 삭제 완료"
 
 # 학습된 모델 파일을 AI_Lambda/model 디렉토리로 복사
 cp -r saved_model/* AI_Lambda/model/
+cp -r saved_model/metadata/* output/metadata/
 log_message "모델 파일 복사 완료"
 
-# 메타데이터 파일을 S3에 업로드
-log_message "메타데이터 파일 S3 업로드 시작"
-if [ -d "saved_model/metadata" ]; then
-    # S3 버킷 이름 설정
-    S3_BUCKET="optiquant-ai-metadata"
-
-    # metadata 디렉토리의 모든 json 파일을 S3에 업로드
-    for file in saved_model/metadata/*.json; do
-        if [ -f "$file" ]; then
-            filename=$(basename "$file")
-            # S3에 파일 업로드
-            if aws s3 cp "$file" "s3://${S3_BUCKET}/${filename}"; then
-                log_message "메타데이터 파일 업로드 성공: ${filename}"
-            else
-                log_message "메타데이터 파일 업로드 실패: ${filename}"
-            fi
-        fi
-    done
-    log_message "메타데이터 파일 S3 업로드 완료"
-else
-    log_message "메타데이터 디렉토리를 찾을 수 없습니다"
-fi
 
 # AI_Lambda 디렉토리로 이동
 cd AI_Lambda
