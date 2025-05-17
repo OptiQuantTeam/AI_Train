@@ -5,6 +5,7 @@ LOG_FILE="/workspace/output/system.log"
 
 # output 디렉토리 생성 및 로그 파일 초기화
 mkdir -p /workspace/output
+mkdir -p /workspace/output/metadata
 rm -f "$LOG_FILE"
 touch "$LOG_FILE"
 
