@@ -24,6 +24,13 @@ git config --list | while read line; do
     log_message "- $line"
 done
 
+# GitHub 인증 테스트
+if ! git ls-remote https://${GITHUB_TOKEN}@github.com/OptiQuantTeam/AI_Lambda.git &>/dev/null; then
+    log_message "오류: GitHub 저장소 접근 권한이 없습니다."
+    log_message "토큰 권한과 조직 멤버십을 확인해주세요."
+    exit 1
+fi
+
 # output 디렉토리 생성 및 로그 파일 초기화
 mkdir -p /workspace/output
 mkdir -p /workspace/output/metadata
