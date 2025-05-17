@@ -30,7 +30,6 @@ mkdir -p /workspace/saved_model/logs
 log_message "로그 디렉토리 생성 완료"
 
 # 상위 디렉토리로 이동하여 AI 학습 실행
-cd ..
 log_message "AI 학습 시작"
 # 학습 결과를 로그 파일에 기록
 python3 src/main.py 2>&1 | tee -a "$LOG_FILE"
