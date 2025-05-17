@@ -6,12 +6,12 @@ log_message() {
 }
 
 # 로그 파일 경로 설정
-LOG_FILE="/workspace/output/system.log"
+LOG_FILE="/workspace/saved_model/logs/system.log"
 
 
 
 # output 디렉토리 생성 및 로그 파일 초기화
-mkdir -p /workspace/output
+mkdir -p /workspace/saved_model/logs
 rm -f "$LOG_FILE"
 touch "$LOG_FILE"
 
@@ -25,7 +25,6 @@ log_message "작업 디렉토리로 이동 완료"
 
 
 # AI 학습 실행 전에 필요한 디렉토리 생성
-mkdir -p /workspace/saved_model/logs
 log_message "로그 디렉토리 생성 완료"
 
 # 상위 디렉토리로 이동하여 AI 학습 실행
