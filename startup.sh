@@ -57,11 +57,12 @@ cd AI_Lambda
 # 변경사항 커밋 및 푸시
 if git add . && git commit -m "Update model files" && git push origin master; then
     log_message "모델 파일이 성공적으로 업로드되었습니다."
-    # 서버 종료
     log_message "시스템 종료 시작"
     #sudo shutdown -h now
 else
+    error_msg=$(git status 2>&1)
     log_message "AI_Lambda 레포지토리 Git 작업 중 오류가 발생했습니다."
+    log_message "Git 상태: $error_msg"
     exit 1
 fi
 
