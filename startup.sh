@@ -35,7 +35,16 @@ log_message "AI 학습 시작"
 python3 src/main.py 2>&1 | tee -a "$LOG_FILE"
 log_message "AI 학습 완료"
 
+# GitHub 토큰 확인
+if [ -z "$GITHUB_TOKEN" ]; then
+    log_message "오류: GITHUB_TOKEN 환경 변수가 설정되지 않았습니다."
+    exit 1
+fi
 
+# Git 자격 증명 설정
+git config --global credential.helper store
+echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+log_message "Git 자격 증명 설정 완료"
 
 # Git 설정 확인
 log_message "Git 설정 정보:"
