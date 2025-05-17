@@ -1,0 +1,89 @@
+{
+    "model_name": "PPO9",
+    "training_start_time": "2025-05-17_17-55-58",
+    "end_time": "20250517_17:56:03",
+    "learning_params": {
+        "state_dim": 5,
+        "action_dim": 3,
+        "gamma": 0.99,
+        "epsilon": 0.2,
+        "epochs": 20,
+        "lr_actor": 0.0004,
+        "lr_critic": 0.002,
+        "batch_size": 32,
+        "device": "cuda"
+    },
+    "training_state": {
+        "current_episode": 10083,
+        "total_episodes": 10083,
+        "last_step": 309,
+        "checkpoint_term": 5000,
+        "total_steps": 310,
+        "update_counts": 9
+    },
+    "training_results": {
+        "completed_episodes": 2168,
+        "win_rate": 21.478105805428967,
+        "episode_win_rate": [
+            0.5483870967741935
+        ],
+        "mean_episode_win_rate": 0.5483870967741935,
+        "max_episode_win_rate": 0.5483870967741935,
+        "min_episode_win_rate": 0.5483870967741935
+    },
+    "returns_stats": {
+        "best_return": 1778687.141315344,
+        "worst_return": 590547.5166496354,
+        "final_return": 1002935.8349155663,
+        "mean_return": 979175.296652356,
+        "return_std": 59842.05788940094,
+        "sharpe_ratio": 16.362660830649425
+    },
+    "profit_rate_stats": {
+        "best_profit_rate": 77.8687141315344,
+        "worst_profit_rate": -40.94524833503647,
+        "final_profit_rate": 0.29358349155662583,
+        "mean_profit_rate": -2.082470334764387,
+        "profit_rate_std": 5.984205788940095,
+        "positive_rate": 0.2862096294828611
+    },
+    "reward_stats": {
+        "total_reward": -161298.14772819958,
+        "mean_reward": -15.979606471983193,
+        "max_reward": 21.665402483724943,
+        "min_reward": -176.04420676271133,
+        "reward_std": 15.386652538701345
+    },
+    "environment_info": {
+        "data_path": "/workspace/src/data/preprocess/BTCUSDT/BTCUSDT-30m-weekly.csv",
+        "total_data_length": 310,
+        "training_period": {
+            "start": "0",
+            "end": "309"
+        }
+    },
+    "session_info": {
+        "session_type": "completed",
+        "session_time": "20250517_17:56:03",
+        "start_time": "2025-05-17_17-55-58",
+        "log_file": "logs/PPO9.log",
+        "previous_episodes": 10082,
+        "current_session_episodes": 1,
+        "total_episodes_all_sessions": 10083,
+        "training_sessions": 1
+    },
+    "training_history": {
+        "previous_sessions": [],
+        "current_session": {
+            "session_number": 1,
+            "start_episode": 10082,
+            "end_episode": 10083,
+            "episodes_trained": 1,
+            "start_time": "2025-05-17_17-55-58",
+            "end_time": "20250517_17:56:03",
+            "win_rate": 21.478105805428967,
+            "mean_episode_win_rate": 0.5483870967741935,
+            "mean_profit_rate": -2.082470334764387
+        }
+    }
+}
