@@ -34,6 +34,10 @@ log_message "AI_Lambda 디렉토리 내 모든 파일(숨김 파일 포함) 삭�
 git clone -b master https://github.com/OptiQuantTeam/AI_Lambda.git .
 log_message "AI_Lambda 레포지토리 클론 완료"
 
+# AI 학습 실행 전에 필요한 디렉토리 생성
+mkdir -p /workspace/saved_model/logs
+log_message "로그 디렉토리 생성 완료"
+
 # 상위 디렉토리로 이동하여 AI 학습 실행
 cd ..
 log_message "AI 학습 시작"
