@@ -1,14 +1,12 @@
 #!/bin/bash
 
+# 로그 파일 경로 설정
+LOG_FILE="/workspace/saved_model/logs/system.log"
+
 # 로그 함수 정의
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
-
-# 로그 파일 경로 설정
-LOG_FILE="/workspace/saved_model/logs/system.log"
-
-
 
 # output 디렉토리 생성 및 로그 파일 초기화
 mkdir -p /workspace/saved_model/logs
