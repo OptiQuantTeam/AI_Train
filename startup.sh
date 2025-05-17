@@ -37,6 +37,12 @@ log_message "AI 학습 완료"
 
 
 
+# Git 설정 확인
+log_message "Git 설정 정보:"
+git config --list | while read line; do
+    log_message "- $line"
+done
+
 # AI_Train 레포지토리 변경사항 커밋 및 푸시
 if git add . && git commit -m "Update training results" && git push origin master; then
     log_message "AI_Train 레포지토리 변경사항이 성공적으로 업로드되었습니다."
@@ -44,3 +50,5 @@ else
     log_message "AI_Train 레포지토리 Git 작업 중 오류가 발생했습니다."
     exit 1
 fi
+
+
