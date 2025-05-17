@@ -1,14 +1,2 @@
-[2025-05-17 09:10:13] AI 학습 완료
-[2025-05-17 09:10:13] Git 자격 증명 설정 완료
-[2025-05-17 09:10:13] Git 설정 정보:
-[2025-05-17 09:10:13] - user.name=lucas
-[2025-05-17 09:10:13] - user.email=wymam1@gmail.com
-[2025-05-17 09:10:13] - credential.helper=store
-[2025-05-17 09:10:13] - core.repositoryformatversion=0
-[2025-05-17 09:10:13] - core.filemode=true
-[2025-05-17 09:10:13] - core.bare=false
-[2025-05-17 09:10:13] - core.logallrefupdates=true
-[2025-05-17 09:10:13] - remote.origin.url=https://@github.com/OptiQuantTeam/AI_Train.git
-[2025-05-17 09:10:13] - remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
-[2025-05-17 09:10:13] - branch.master.remote=origin
-[2025-05-17 09:10:13] - branch.master.merge=refs/heads/master
+[2025-05-17 09:59:12] AI 학습 완료
+[2025-05-17 09:59:12] Git 자격 증명 설정 완료
