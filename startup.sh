@@ -3,6 +3,16 @@
 # 로그 파일 경로 설정
 LOG_FILE="/workspace/output/system.log"
 
+# GitHub 토큰 확인
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo "오류: GITHUB_TOKEN 환경 변수가 설정되지 않았습니다."
+    exit 1
+fi
+
+# Git 자격 증명 설정
+git config --global credential.helper store
+echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+
 # output 디렉토리 생성 및 로그 파일 초기화
 mkdir -p /workspace/output
 mkdir -p /workspace/output/metadata
@@ -31,7 +41,7 @@ rm -rf .[!.]* *
 log_message "AI_Lambda 디렉토리 내 모든 파일(숨김 파일 포함) 삭제 완료"
 
 # AI_Lambda 레포지토리 클론
-git clone -b master https://github.com/OptiQuantTeam/AI_Lambda.git .
+git clone -b master https://${GITHUB_TOKEN}@github.com/OptiQuantTeam/AI_Lambda.git .
 log_message "AI_Lambda 레포지토리 클론 완료"
 
 # AI 학습 실행 전에 필요한 디렉토리 생성
