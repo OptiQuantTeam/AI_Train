@@ -1,17 +1,28 @@
 #!/bin/bash
+# 로그 함수 정의
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
 
 # 로그 파일 경로 설정
 LOG_FILE="/workspace/output/system.log"
 
 # GitHub 토큰 확인
 if [ -z "$GITHUB_TOKEN" ]; then
-    echo "오류: GITHUB_TOKEN 환경 변수가 설정되지 않았습니다."
+    log_message "오류: GITHUB_TOKEN 환경 변수가 설정되지 않았습니다."
     exit 1
 fi
 
 # Git 자격 증명 설정
 git config --global credential.helper store
 echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+log_message "Git 자격 증명 설정 완료"
+
+# Git 설정 확인
+log_message "Git 설정 정보:"
+git config --list | while read line; do
+    log_message "- $line"
+done
 
 # output 디렉토리 생성 및 로그 파일 초기화
 mkdir -p /workspace/output
@@ -19,10 +30,6 @@ mkdir -p /workspace/output/metadata
 rm -f "$LOG_FILE"
 touch "$LOG_FILE"
 
-# 로그 함수 정의
-log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
-}
 
 # 시작 로그 기록
 log_message "=== 스크립트 실행 시작 ==="
