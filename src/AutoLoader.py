@@ -101,7 +101,7 @@ class AutoLoader():
         step_num_history = training_results.get('step_num_history', [])
 
 
-        self.num_episodes = current_episode + 1
+        self.num_episodes = current_episode + 1000
         # PPO 에이전트 재생성
         ppo_agent = algo.PPO3(
             state_dim=state_dim,
