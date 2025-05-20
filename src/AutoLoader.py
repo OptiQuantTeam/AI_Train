@@ -14,7 +14,7 @@ class AutoLoader():
         self.env = env.FuturesEnv11_train(path=env_path)
 
         self.agent, self.model_info, self.learning_info = self._load_model()
-        self.logger = Logger(self.agent.model_name, f'saved_model/logs/{self.agent.model_name}.log', console_level=LogLevel.ERROR, file_level=LogLevel.ERROR)
+        self.logger = Logger(self.agent.model_name, f'saved_model/logs/system.log', console_level=LogLevel.INFO, file_level=LogLevel.INFO)
         os.makedirs('saved_model/logs', exist_ok=True)
         self.env.logger = self.logger
 
@@ -76,6 +76,7 @@ class AutoLoader():
         epsilon = learning_params.get('epsilon', 0.2)
         batch_size = learning_params.get('batch_size', 32)
         epochs = learning_params.get('epochs', 20)
+        alpha = learning_params.get('alpha', 0.5)
         
         # 학습 진행 상태 (새 구조)
         training_state = learning_info.get('training_state', {})
@@ -101,7 +102,7 @@ class AutoLoader():
         step_num_history = training_results.get('step_num_history', [])
 
 
-        self.num_episodes = current_episode + 1000
+        self.num_episodes = current_episode + 10
         # PPO 에이전트 재생성
         ppo_agent = algo.PPO3(
             state_dim=state_dim,
@@ -110,8 +111,10 @@ class AutoLoader():
             lr_actor=lr_actor,
             lr_critic=lr_critic,
             gamma=gamma,
+            batch_size=batch_size,
             epsilon=epsilon,
-            epochs=epochs
+            epochs=epochs,
+            alpha=alpha
         )
 
         # 모델 가중치 로드
@@ -136,6 +139,7 @@ class AutoLoader():
                 'lr_actor': lr_actor,
                 'lr_critic': lr_critic,
                 'batch_size': batch_size,
+                'alpha': alpha,
                 'device': str(ppo_agent.device)
             }
         }
@@ -212,8 +216,7 @@ class AutoLoader():
                     except Exception as e:
                         self.logger.error(f"메타데이터 파일 삭제 중 오류 발생: {str(e)}")
 
-
-                self.logger.render("이전 모델 파일들과 로그 파일들이 성공적으로 삭제되었습니다.")
+                self.logger.error("이전 모델 파일들과 로그 파일들이 성공적으로 삭제되었습니다.")
             else:
                 self.logger.error("agent가 초기화되지 않아 파일 삭제를 진행할 수 없습니다.")
             
@@ -221,16 +224,9 @@ class AutoLoader():
             self.logger.error(f"파일 삭제 중 예상치 못한 오류 발생: {str(e)}")
     
     def train(self, **kwargs):
-
-        # 로그 파일 삭제
-        log_files = glob.glob('saved_model/logs/*.log*')
-        for file in log_files:
-            try:
-                os.remove(file)
-            except Exception as e:
-                self.logger.error(f"로그 파일 삭제 중 오류 발생: {str(e)}")
-
+        self.logger.setTrainLevel()  # 로깅 레벨을 ERROR로 설정
         self.logger.render_training_start(time=(datetime.datetime.now() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d_%H-%M-%S'))
+        self.agent.test_mode = False
 
         # 학습 진행 상황
         if 'training_state' in self.learning_info:
@@ -278,16 +274,16 @@ class AutoLoader():
                     state = next_state
                     
                     if len(self.agent.memory) >= self.agent.batch_size:
-                        #update_count += agent.update(success_rate=sum(episode_results) / len(episode_results))
                         update_count += self.agent.update()
+
                     balance_history.append(info['balance'])
                     if done:
                         profit_rate_history.append(info['profit_rate'])
-                        episode_results.append(1 if self.env.balance > self.env.initial_balance * 1.01 else 0)
-                        update_count += self.agent.update(success_rate=sum(episode_results) / len(episode_results)) if info['liquidated'] else 0
+                        episode_results.append(1 if self.env.balance > self.env.initial_balance else 0)
+                        update_count += self.agent.update() if info['liquidated'] else 0
                         break
 
-                self.logger.render(f"  반복한 step: {self.env.num}, 에피소드 보상: {episode_reward:.2f}, 업데이트 횟수: {update_count}")
+                self.logger.error(f"  반복한 step: {self.env.num}, 에피소드 보상: {episode_reward:.2f}, 업데이트 횟수: {update_count}")
                 self.env.render()
                 self.logger.render_episode_end(sum(episode_results) / len(episode_results))
                 
@@ -309,7 +305,7 @@ class AutoLoader():
             }
 
             self.logger.render_training_result(result=result)
-
+            self.agent.memory.clear()
         except KeyboardInterrupt:
             self.logger.error("\n학습이 사용자에 의해 중단되었습니다.")
         except Exception as e:
@@ -320,7 +316,7 @@ class AutoLoader():
 
                 self.logger.render_training_end(time=(datetime.datetime.now() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d_%H-%M-%S'))
 
-                time = (datetime.datetime.now() + datetime.timedelta(hours=9)).strftime("%Y%m%d_%H:%M:%S")
+                time = (datetime.datetime.now() + datetime.timedelta(hours=9)).strftime("%Y%m%d_%H-%M-%S")
 
                 # 체크포인트 데이터 준비
                 learning_info = {
@@ -367,20 +363,90 @@ class AutoLoader():
                     }
                 }
                     
-                # 수익률 통계 계산
-                balance_profit_rate_array = np.array(all_balance_history) if 'all_balance_history' in locals() and all_balance_history else np.array([])
-                balance_profit_rate_std = float(np.std(balance_profit_rate_array)) if len(balance_profit_rate_array) > 0 else 0
+
+                os.makedirs('saved_model', exist_ok=True)
+                os.makedirs(f'saved_model/learning_info', exist_ok=True)
+                os.makedirs(f'saved_model/metadata', exist_ok=True)
                 
-                # 승률 계산
-                win_rate = sum(episode_results) / len(episode_results) * 100 if episode_results else 0
+                self._delete_old_models()
+                self.agent.save_model(f'saved_model/{self.agent.model_name}_{time}.pth')
+                self.agent.save_learning_state(learning_info, f'saved_model/learning_info/{self.agent.model_name}_{time}.json')
                 
-                # 수익률 데이터
-                profit_rates = np.array(profit_rate_history) if 'profit_rate_history' in locals() and profit_rate_history else np.array([])
                 
+            except Exception as save_error:
+                self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")
+        
+        return episode_rewards
+
+    def test(self):
+        self.agent.test_mode = True
+        self.logger.setTestLevel()
+
+        try:
+            self.logger.render_test_start(time=(datetime.datetime.now() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d_%H-%M-%S'))
+
+            balance_history = []
+            actions = []
+            episode_reward = 0                
+            
+            state = self.env.reset()
+            
+            while True:
+                self.env.num += 1
+                action, value, log_prob = self.agent.select_action(state)
+                next_state, reward, done, info = self.env.step(action)
+                
+                actions.append(info['position'])
+                
+                episode_reward += reward
+                state = next_state
+
+
+                balance_history.append(info['balance'])
+                if done:
+                    break
+
+            self.env.render()
+        
+            result = {
+                'environment_data': {
+                    'episode_reward': episode_reward,
+                    'final_balance': self.env.balance,
+                    'initial_balance': self.env.initial_balance,
+                    'total_steps': self.env.num,     
+                },
+                'performance_metrics': {
+                    'total_profit': self.env.balance - self.env.initial_balance,
+                    'profit_rate': (self.env.balance - self.env.initial_balance) / self.env.initial_balance * 100,
+                    'profitable_trades': sum(1 for i in range(1, len(balance_history)) if balance_history[i] > balance_history[i-1]),
+                    'average_profit_per_trade': (self.env.balance - self.env.initial_balance) / len(actions) if actions else 0
+                },
+                'trading_statistics': {
+                    'long_positions': sum(1 for action in actions if action == 1),
+                    'short_positions': sum(1 for action in actions if action == -1),
+                    'neutral_positions': sum(1 for action in actions if action == 0),
+                    'consecutive_wins': self._calculate_consecutive_wins(balance_history),
+                    'consecutive_losses': self._calculate_consecutive_losses(balance_history),
+                    'average_holding_time': self.env.num / len(actions) if actions else 0
+                }
+            }
+            balance_profit_rate = self.env.balance_profit_rate * 100
+            
+            self.logger.render_test_result(result)
+            time=(datetime.datetime.now() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d_%H-%M-%S')
+            self.logger.render_test_end(time)
+
+
+        except KeyboardInterrupt:
+            self.logger.error("\n학습이 사용자에 의해 중단되었습니다.")
+        except Exception as e:
+            self.logger.error(f"\n에러 발생: {str(e)}")
+            raise e
+        finally:
+            try:
                 metadata = {
                     # 모델 기본 정보
                     'model_name': self.agent.model_name,
-                    'training_start_time': start_time,  # 이번 학습 시작 시간
                     'end_time': time,
                     
                     # 학습 파라미터
@@ -393,58 +459,29 @@ class AutoLoader():
                         'lr_actor': self.agent.optimizer.param_groups[0]['lr'],
                         'lr_critic': self.agent.optimizer.param_groups[-1]['lr'],
                         'batch_size': self.agent.batch_size,  # 메모리 크기
+                        'alpha': self.agent.alpha,
                         'device': str(self.agent.device)
                     },
                     
-                    # 학습 진행 상태
-                    'training_state': {
-                        'current_episode': episode + 1,
-                        'total_episodes': self.num_episodes,
-                        'last_step': self.env.last_step,
-                        'checkpoint_term': checkpoint_term,
-                        'total_steps': self.env.num if hasattr(self.env, 'num') else 0,
-                        'update_counts': update_count if 'update_count' in locals() else 0
+                    # 성능 지표
+                    'performance_metrics': {
+                    'total_profit': self.env.balance - self.env.initial_balance,
+                    'profit_rate': (self.env.balance - self.env.initial_balance) / self.env.initial_balance * 100,
+                    'profitable_trades': sum(1 for i in range(1, len(balance_history)) if balance_history[i] > balance_history[i-1]),
+                    'average_profit_per_trade': (self.env.balance - self.env.initial_balance) / len(actions) if actions else 0
                     },
-                    
-                    # 학습 결과
-                    'training_results': {
-                        'completed_episodes': sum(episode_results) if episode_results else 0,
-                        'win_rate': win_rate,
-                        'episode_win_rate': episode_win_rate,
-                        'mean_episode_win_rate': float(np.mean(episode_win_rate)) if len(episode_win_rate) > 0 else 0,
-                        'max_episode_win_rate': max(episode_win_rate) if len(episode_win_rate) > 0 else 0,
-                        'min_episode_win_rate': min(episode_win_rate) if len(episode_win_rate) > 0 else 0
+
+                    # 테스트 거래 통계 
+                    'trading_statistics': {
+                        'long_positions': sum(1 for action in actions if action == 1),
+                        'short_positions': sum(1 for action in actions if action == -1),
+                        'neutral_positions': sum(1 for action in actions if action == 0),
+                        'consecutive_wins': self._calculate_consecutive_wins(balance_history),
+                        'consecutive_losses': self._calculate_consecutive_losses(balance_history),
+                        'average_holding_time': self.env.num / len(actions) if actions else 0
                     },
-                    
-                    # 수익률 통계
-                    'returns_stats': {
-                        'best_return': float(max(balance_profit_rate_array)) if len(balance_profit_rate_array) > 0 else float('-inf'),
-                        'worst_return': float(min(balance_profit_rate_array)) if len(balance_profit_rate_array) > 0 else float('-inf'),
-                        'final_return': float(balance_profit_rate_array[-1]) if len(balance_profit_rate_array) > 0 else float('-inf'),
-                        'mean_return': float(np.mean(balance_profit_rate_array)) if len(balance_profit_rate_array) > 0 else 0,
-                        'return_std': balance_profit_rate_std,
-                        'sharpe_ratio': float(np.mean(balance_profit_rate_array) / balance_profit_rate_std) if balance_profit_rate_std != 0 and len(balance_profit_rate_array) > 0 else 0
-                    },
-                    
-                    # 수익률 데이터 통계
-                    'profit_rate_stats': {
-                        'best_profit_rate': float(max(profit_rates)) if len(profit_rates) > 0 else float('-inf'),
-                        'worst_profit_rate': float(min(profit_rates)) if len(profit_rates) > 0 else float('-inf'),
-                        'final_profit_rate': float(profit_rates[-1]) if len(profit_rates) > 0 else float('-inf'),
-                        'mean_profit_rate': float(np.mean(profit_rates)) if len(profit_rates) > 0 else 0,
-                        'profit_rate_std': float(np.std(profit_rates)) if len(profit_rates) > 0 else 0,
-                        'positive_rate': float(np.sum(profit_rates > 0) / len(profit_rates)) if len(profit_rates) > 0 else 0
-                    },
-                    
-                    # 보상 통계
-                    'reward_stats': {
-                        'total_reward': sum(episode_rewards) if 'episode_rewards' in locals() else 0,
-                        'mean_reward': np.mean(episode_rewards) if 'episode_rewards' in locals() else 0,
-                        'max_reward': max(episode_rewards) if 'episode_rewards' in locals() else float('-inf'),
-                        'min_reward': min(episode_rewards) if 'episode_rewards' in locals() else float('inf'),
-                        'reward_std': float(np.std(episode_rewards)) if 'episode_rewards' in locals() else 0
-                    },
-                    
+    
+                        
                     # 환경 정보
                     'environment_info': {
                         'data_path': self.env.path if hasattr(self.env, 'path') else None,
@@ -454,44 +491,7 @@ class AutoLoader():
                             'end': str(self.env.data.index[-1]) if hasattr(self.env, 'data') else None
                         }
                     },
-                    
-                    # 세션 정보
-                    'session_info': {
-                        'session_type': 'completed',
-                        'session_time': time,
-                        'start_time': start_time,
-                        'log_file': f'logs/{self.agent.model_name}.log',
-                        'previous_episodes': start_episode,
-                        'current_session_episodes': episode + 1 - start_episode,
-                        'total_episodes_all_sessions': start_episode + (episode + 1 - start_episode),
-                        'training_sessions': self.model_info.get('training_sessions', 0) + 1
-                    },
-                    
-                    # 학습 히스토리
-                    'training_history': {
-                        'previous_sessions': self.model_info.get('training_history', {}).get('previous_sessions', []),
-                        'current_session': {
-                            'session_number': self.model_info.get('training_sessions', 0) + 1,
-                            'start_episode': start_episode,
-                            'end_episode': episode + 1,
-                            'episodes_trained': episode + 1 - start_episode,
-                            'start_time': start_time,
-                            'end_time': time,
-                            'win_rate': win_rate,
-                            'mean_episode_win_rate': float(np.mean(episode_win_rate)) if len(episode_win_rate) > 0 else 0,
-                            'mean_profit_rate': float(np.mean(profit_rates)) if len(profit_rates) > 0 else 0
-                        }
-                    }
                 }
-                
-
-                os.makedirs('saved_model', exist_ok=True)
-                os.makedirs(f'saved_model/learning_info', exist_ok=True)
-                os.makedirs(f'saved_model/metadata', exist_ok=True)
-                
-                self._delete_old_models()
-                self.agent.save_model(f'saved_model/{self.agent.model_name}_{time}.pth')
-                self.agent.save_learning_state(learning_info, f'saved_model/learning_info/{self.agent.model_name}_{time}.json')
                 with open(f'saved_model/metadata/{self.agent.model_name}_metadata_{time}.json', 'w') as f:
                     json.dump(metadata, f, indent=4)
                 
@@ -499,4 +499,36 @@ class AutoLoader():
             except Exception as save_error:
                 self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")
         
-        return episode_rewards
+        return balance_profit_rate
+
+    def _calculate_consecutive_wins(self, balance_history):
+        if len(balance_history) < 2:
+            return 0
+            
+        max_consecutive = 0
+        current_consecutive = 0
+        
+        for i in range(1, len(balance_history)):
+            if balance_history[i] > balance_history[i-1]:
+                current_consecutive += 1
+                max_consecutive = max(max_consecutive, current_consecutive)
+            else:
+                current_consecutive = 0
+                
+        return max_consecutive
+        
+    def _calculate_consecutive_losses(self, balance_history):
+        if len(balance_history) < 2:
+            return 0
+            
+        max_consecutive = 0
+        current_consecutive = 0
+        
+        for i in range(1, len(balance_history)):
+            if balance_history[i] < balance_history[i-1]:
+                current_consecutive += 1
+                max_consecutive = max(max_consecutive, current_consecutive)
+            else:
+                current_consecutive = 0
+                
+        return max_consecutive

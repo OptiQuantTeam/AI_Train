@@ -67,14 +67,14 @@ class IndicatorDistribution3(nn.Module):
             torch.logical_and(is_bullish, body_size > 0.5),  # 몸통 크기 기준 강화
             has_small_upper_wick  # 작은 위꼬리 조건 추가
         )
-        ha_signal_tensor[strong_bullish, 2] = 0.8  # LONG 가중치 증가
+        ha_signal_tensor[strong_bullish, 2] += 0.8  # LONG 가중치 증가
         
         # 강한 하락 신호 - 더 엄격한 조건
         strong_bearish = torch.logical_and(
             torch.logical_and(is_bearish, body_size > 0.5),  # 몸통 크기 기준 강화
             has_small_lower_wick  # 작은 아래꼬리 조건 추가
         )
-        ha_signal_tensor[strong_bearish, 0] = 0.8  # SHORT 가중치 증가
+        ha_signal_tensor[strong_bearish, 0] += 0.8  # SHORT 가중치 증가
         
         # 3) 200 MA 분석 - 더 엄격한 조건
         ma_200 = state[:, 7]        # ma_200
@@ -100,13 +100,13 @@ class IndicatorDistribution3(nn.Module):
         band_expansion = bb_width > 0.2  # 밴드 확장 기준 강화
         
         # 볼린저 밴드 기반 신호 - 더 엄격한 조건
-        bb_signal_tensor[price_position < 0.2, 2] = 0.8  # 하단 밴드 근처 -> LONG
-        bb_signal_tensor[price_position > 0.8, 0] = 0.8  # 상단 밴드 근처 -> SHORT
+        bb_signal_tensor[price_position < 0.2, 2] += 0.8  # 하단 밴드 근처 -> LONG
+        bb_signal_tensor[price_position > 0.8, 0] += 0.8  # 상단 밴드 근처 -> SHORT
         
         # 밴드 수축 후 확장 시 신호 강화 - 더 엄격한 조건
         squeeze_expansion = torch.logical_and(band_squeeze, band_expansion)
-        bb_signal_tensor[squeeze_expansion, 2] = 0.9  # 수축 후 확장 -> LONG
-        bb_signal_tensor[squeeze_expansion, 0] = 0.9  # 수축 후 확장 -> SHORT
+        bb_signal_tensor[squeeze_expansion, 2] += 0.9  # 수축 후 확장 -> LONG
+        bb_signal_tensor[squeeze_expansion, 0] += 0.9  # 수축 후 확장 -> SHORT
         
         stoch_signal_tensor = torch.zeros((batch_size, self.action_dim), device=state.device)
         
@@ -115,13 +115,13 @@ class IndicatorDistribution3(nn.Module):
         oversold = (stoch_rsi < 0.2)    # 20% 이하
         
         # 기본 Stochastic RSI 신호 - 더 엄격한 조건
-        stoch_signal_tensor[oversold, 2] = 0.8  # 과매도 -> LONG
-        stoch_signal_tensor[overbought, 0] = 0.8  # 과매수 -> SHORT
+        stoch_signal_tensor[oversold, 2] += 0.8  # 과매도 -> LONG
+        stoch_signal_tensor[overbought, 0] += 0.8  # 과매수 -> SHORT
         
         # 200선 신호 - 더 엄격한 조건
         ma_signal_tensor = torch.zeros((batch_size, self.action_dim), device=state.device)
-        ma_signal_tensor[ma_200_signal > 0.1, 2] = 0.7  # 상단 -> LONG
-        ma_signal_tensor[ma_200_signal < -0.1, 0] = 0.7  # 하단 -> SHORT
+        ma_signal_tensor[ma_200_signal > 0.1, 2] += 0.7  # 상단 -> LONG
+        ma_signal_tensor[ma_200_signal < -0.1, 0] += 0.7  # 하단 -> SHORT
         
         # 6) 통합 신호 생성 - 더 엄격한 진입 조건
         ha_ma_stoch_bb_signal = torch.zeros((batch_size, self.action_dim), device=state.device)
@@ -142,24 +142,21 @@ class IndicatorDistribution3(nn.Module):
             ((ma_200_signal < -0.1) & (stoch_signal > 0.1) & (price_position > 0.8))  # MA + RSI + BB
         )
         
-        ha_ma_stoch_bb_signal[long_signal, 2] = 0.9  # LONG 가중치 증가
-        ha_ma_stoch_bb_signal[short_signal, 0] = 0.9  # SHORT 가중치 증가
+        ha_ma_stoch_bb_signal[long_signal, 2] += 0.9  # LONG 가중치 증가
+        ha_ma_stoch_bb_signal[short_signal, 0] += 0.9  # SHORT 가중치 증가
         
         # 7) 모든 신호 통합 - 가중치 조정
         combined_signal = (
-            ha_signal_tensor * 1.5 +  # 하이킨 아시 가중치 증가
-            ma_signal_tensor * 1.2 +  # MA 가중치 증가
-            stoch_signal_tensor * 1.2 +  # RSI 가중치 증가
-            bb_signal_tensor * 1.5 +  # 볼린저 밴드 가중치 증가
+            ha_signal_tensor * 1.0 +  # 하이킨 아시 가중치 증가
+            ma_signal_tensor * 1.0 +  # MA 가중치 증가
+            stoch_signal_tensor * 1.0 +  # RSI 가중치 증가
+            bb_signal_tensor * 1.0 +  # 볼린저 밴드 가중치 증가
             ha_ma_stoch_bb_signal * 2.0  # 통합 신호 가중치 증가
         )
         
         # 8) 최종 확률 분포 계산
         mixed_logits = default_logits + combined_signal
-        
-        gumbel_noise = -torch.log(-torch.log(torch.rand_like(mixed_logits)))
-        final_probs = F.softmax((mixed_logits + gumbel_noise) / 1.5, dim=-1)
-        
+        final_probs = F.softmax(mixed_logits, dim=-1)
         
         return final_probs
         

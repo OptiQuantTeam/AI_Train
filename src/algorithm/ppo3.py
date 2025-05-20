@@ -22,6 +22,7 @@ class PPO3:
         epsilon=0.2,
         epochs=10,
         batch_size=32,
+        alpha=0.5,
         kl_target=0.01,  # KL 발산 목표값
         kl_coef=0.5,     # KL 발산 계수
         device="cuda" if torch.cuda.is_available() else "cpu"
@@ -48,32 +49,64 @@ class PPO3:
         self.batch_size = batch_size
         self.memory = deque()
         self.performances = deque()
-        self.alpha = 0.7
+        self.alpha = alpha
         # KL 발산 관련 파라미터
         self.kl_target = kl_target
         self.kl_coef = kl_coef
+        self.test_mode = False
         
     def select_action(self, state):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
         state = state[:, 5:]  # 5번 인덱스부터 마지막까지의 데이터만 사용
-        state2 = state[:, [7,9,10,11,17]]
-        self.actor_critic.eval()
+        state2 = state[:, [7,9,10,11,16,17]]
+        #self.actor_critic.eval()
         with torch.no_grad():
             value, action_probs, action_logits = self.actor_critic(state2)
             pi_I = self.indicator_distribution(state)
 
-            # 두 분포의 평균을 사용
-            pi = self.alpha * action_probs + (1 - self.alpha) * pi_I
-            action_dist = torch.distributions.Categorical(pi)
-            action_idx = action_dist.sample()
-            action = action_idx.float() - 1.0
-            log_prob = action_dist.log_prob(action_idx)
+            if not self.test_mode:
+                ai_dist = torch.distributions.Categorical(action_probs)
+                ai_idx = ai_dist.sample()
+                ai = ai_idx.float() - 1.0
 
-            
+                indicator_dist = torch.distributions.Categorical(pi_I)
+                indicator_idx = indicator_dist.sample()
+                indicator = indicator_idx.float() - 1.0
+
+                if ai != indicator:
+                    # 두 분포의 평균을 사용
+                    pi = self.alpha * action_probs + (1 - self.alpha) * pi_I
+                    action_dist = torch.distributions.Categorical(pi)
+                    action_idx = action_dist.sample()
+                    action = action_idx.float() - 1.0
+                    log_prob = action_dist.log_prob(action_idx)
+                else:
+                    action = ai
+                    log_prob = ai_dist.log_prob(ai_idx)
+            else:
+                # 테스트 모드에서는 가장 높은 확률을 가진 액션 선택
+                ai_idx = torch.argmax(action_probs)
+                ai = ai_idx.float() - 1.0
+                log_prob_ai = torch.log(action_probs)
+
+                indicator_idx = torch.argmax(pi_I)
+                indicator = indicator_idx.float() - 1.0
+                
+
+                if ai != indicator:
+                    pi = self.alpha * action_probs + (1 - self.alpha) * pi_I
+                    action_idx = torch.argmax(pi)
+                    action = action_idx.float() - 1.0
+                    log_prob = torch.log(pi)
+                else:
+                    action = ai
+                    log_prob = log_prob_ai
+                    
+                    
         return (
-            action.cpu().numpy()[0],
+            action.cpu().numpy(),
             value.cpu().numpy()[0],
-            log_prob.cpu().numpy()[0]
+            log_prob.cpu().numpy()
         )
         
     def store_transition(self, transition):
@@ -116,10 +149,10 @@ class PPO3:
         returns = []
         gae = 0
         
-        self.actor_critic.train()
+        #self.actor_critic.train()
         with torch.no_grad():
             next_state_batch = next_state_batch[:, 5:]
-            next_state_batch2 = next_state_batch[:, [7,9,10,11,17]]
+            next_state_batch2 = next_state_batch[:, [7,9,10,11,16,17]]
             next_value = self.actor_critic(next_state_batch2)[0]  # value는 첫 번째 반환값
             next_value = next_value.squeeze()
             
@@ -161,11 +194,10 @@ class PPO3:
                 
                 if len(idx) < self.batch_size:
                     break
-                
                 # 현재 미니배치
                 state = state_batch[idx]
                 state = state[:, 5:]
-                state2 = state[:, [7,9,10,11,17]]
+                state2 = state[:, [7,9,10,11,16,17]]
                 action = action_batch[idx]
                 advantage = advantages[idx]
                 return_ = returns[idx]
@@ -177,7 +209,7 @@ class PPO3:
                 pi = self.alpha * action_probs + (1 - self.alpha) * pi_I
                 
                 # Categorical 분포에서 액션 샘플링
-                action_dist = torch.distributions.Categorical(pi)
+                action_dist = torch.distributions.Categorical(logits=pi)
                 action_idx = action_dist.sample()
                 new_action = action_idx.float() - 1.0
                 new_log_prob = action_dist.log_prob(action_idx)
@@ -201,7 +233,8 @@ class PPO3:
                 
                 # 2. Critic Loss - Huber Loss
                 value = value.squeeze(-1)
-                critic_loss = nn.SmoothL1Loss()(value, return_)
+                critic_loss = torch.clamp((value - return_)**2, max=5.0).mean()
+                #critic_loss = nn.SmoothL1Loss()(value, return_)
                 
                 # 3. 엔트로피 손실 (탐색을 위한)
                 entropy_loss = -0.01 * action_dist.entropy().mean()
@@ -213,7 +246,7 @@ class PPO3:
                 
                 
                 # 전체 손실 함수 (모니터링용)
-                total_loss = actor_total_loss + 0.5 * critic_loss
+                total_loss = actor_total_loss + 0.3 * critic_loss
                 
                 self.optimizer.zero_grad()
                 total_loss.backward()

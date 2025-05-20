@@ -48,7 +48,7 @@ class FuturesEnv11_train(gym.Env):
         self.initial_leverage = 2  # 초기 레버리지
         self.leverage = self.initial_leverage  # 현재 레버리지
         self.min_leverage = 1.0  # 최소 레버리지
-        self.max_leverage = 2.0  # 최대 레버리지
+        self.max_leverage = 8.0  # 최대 레버리지
         self.leverage_step = 1  # 레버리지 조정 단위
         self.trade_fee = 0.0002
         self.max_steps = 2100
@@ -56,23 +56,31 @@ class FuturesEnv11_train(gym.Env):
         self.profit_target = 0.1  # 10% 수익 목표
         self.max_position_ratio = 1  # 최대 포지션 크기 비율 감소
         self.stop_loss_threshold = 0.02  # 손절매 임계값 감소
+        self.take_profit_threshold = 0.02  # 익절매 임계값 감소
         self.recurrence = 0
         self.test = False
                
         # 레버리지에 따른 손실 제한 관련 파라미터
         self.leverage_loss_limits = {
-            4.0: 0.10,  # 2배 레버리지일 때 10%
-            3.0: 0.075,  # 1.8배 레버리지일 때 9%
-            2.0: 0.05,  # 1.6배 레버리지일 때 8%
-            1.0: 0.025,  # 1.4배 레버리지일 때 7%
+            8.0: 0.04,  # 2배 레버리지일 때 10%
+            4.0: 0.03,  # 1.8배 레버리지일 때 9%
+            2.0: 0.02,  # 1.6배 레버리지일 때 8%
+            1.0: 0.01,  # 1.4배 레버리지일 때 7%
+        }
+
+        self.leverage_profit_limits = {
+            8.0: 0.08,  # 2배 레버리지일 때 10%
+            4.0: 0.06,  # 1.8배 레버리지일 때 9%
+            2.0: 0.04,  # 1.6배 레버리지일 때 8%
+            1.0: 0.02,  # 1.4배 레버리지일 때 7%
         }
         
         # 레버리지에 따른 포지션 비중 조절 파라미터
         self.leverage_position_ratios = {
-            4.0: 0.3,  # 4배 레버리지일 때 20% 포지션
-            3.0: 0.4,  # 3배 레버리지일 때 30% 포지션
-            2.0: 0.5,  # 2배 레버리지일 때 40% 포지션
-            1.0: 0.6   # 1배 레버리지일 때 50% 포지션
+            8.0: 0.4,  # 4배 레버리지일 때 20% 포지션
+            4.0: 0.5,  # 3배 레버리지일 때 30% 포지션
+            2.0: 0.6,  # 2배 레버리지일 때 40% 포지션
+            1.0: 0.7   # 1배 레버리지일 때 50% 포지션
         }
         
         self._load_data()
@@ -81,7 +89,7 @@ class FuturesEnv11_train(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf, 
             high=np.inf, 
-            shape=(5,),  # 상태 공간 확장
+            shape=(6,),  # 상태 공간 확장
             dtype=np.float32
         )
         self.action_space = spaces.Discrete(3, start=-1)
@@ -141,6 +149,17 @@ class FuturesEnv11_train(gym.Env):
         # 해당 레버리지에 맞는 손실 한도 설정
         self.stop_loss_threshold = self.leverage_loss_limits[closest_leverage]
         #self.logger.render(f"현재 레버리지: {self.leverage:.1f}x, 손실 한도: {self.stop_loss_threshold*100:.1f}%")
+    
+    def _adjust_profit_limit(self):
+        '''
+        레버리지에 따라 수익 한도를 조정하는 함수
+        '''
+        closest_leverage = min(self.leverage_profit_limits.keys(), 
+                             key=lambda x: abs(x - self.leverage))
+        
+        # 해당 레버리지에 맞는 수익 한도 설정
+        self.take_profit_threshold = self.leverage_profit_limits[closest_leverage]
+        #self.logger.render(f"현재 레버리지: {self.leverage:.1f}x, 수익 한도: {self.profit_target*100:.1f}%")
 
     def _adjust_leverage(self, profit_rate):
         '''
@@ -148,14 +167,15 @@ class FuturesEnv11_train(gym.Env):
         Args:
             profit_rate: 현재 거래의 수익률
         '''
-        if profit_rate < 0.01:  # 손실인 경우
+        if profit_rate < 0.001:  # 손실인 경우
             self.consecutive_losses += 1
             self.consecutive_wins = 0
             
             # 연속 손실에 따라 레버리지 감소
-            if self.consecutive_losses >= 2:
+            if self.consecutive_losses >= 1:
                 self.leverage = max(self.min_leverage, self.leverage - self.leverage_step)
                 self._adjust_loss_limit()  # 레버리지 변경 시 손실 한도 재조정
+                self._adjust_profit_limit()  # 레버리지 변경 시 수익 한도 재조정
                 #self.logger.render(f"연속 손실로 레버리지 감소: {self.leverage:.2f}")
         else:  # 수익인 경우
             self.consecutive_wins += 1
@@ -165,6 +185,7 @@ class FuturesEnv11_train(gym.Env):
             if self.consecutive_wins >= 2:
                 self.leverage = min(self.max_leverage, self.leverage + self.leverage_step)
                 self._adjust_loss_limit()  # 레버리지 변경 시 손실 한도 재조정
+                self._adjust_profit_limit()  # 레버리지 변경 시 수익 한도 재조정
                 #self.logger.render(f"연속 수익으로 레버리지 증가: {self.leverage:.2f}")
 
     def _get_position_ratio(self):
@@ -214,15 +235,7 @@ class FuturesEnv11_train(gym.Env):
 
         
         self.current_step = 0
-        
-        '''
 
-        self.current_step = self.last_step + 1
-        if self.current_step >= len(self.data) - self.max_steps:
-            self.current_step = 100
-        '''
-
-        self.last_step = self.current_step
         self.tmp_current = self.current_step
         self.balance = self.initial_balance
         self.position = FLAT
@@ -251,8 +264,6 @@ class FuturesEnv11_train(gym.Env):
         self.profit_history = []
         self.profit_rate_history = []
        
-        self.logger.render(f"학습 시작 위치: {self.current_step} (전체 데이터 중 {self.current_step/len(self.data)*100:.2f}%)")
-        self.logger.render(f"현재 손실 한도: {self.stop_loss_threshold*100:.1f}%")
         
         return self._next_observation()
     
@@ -318,7 +329,7 @@ class FuturesEnv11_train(gym.Env):
         profit = 0
         trade_success = False
         profit_rate = 0
-        
+        do = 0  # 거래 행동을 기록하기 위한 변수
         
         # 보상 초기화
         immediate_reward = 0
@@ -362,6 +373,7 @@ class FuturesEnv11_train(gym.Env):
 
         # 포지션 변경 시
         if self.position != position_direction:
+            '''
             # 기존 포지션 청산
             if self.position != FLAT:
                 profit = self.position * (current_price - self.entry_price)
@@ -385,9 +397,8 @@ class FuturesEnv11_train(gym.Env):
                     self.failure += 1
                     if abs(profit_rate) > self.stop_loss_threshold:
                         exit_reward -= 5
-                
-                self.total_trade += 1
-            
+            '''
+
             # 새로운 포지션 진입
             if position_direction != FLAT and not done:
                 # 레버리지에 따른 포지션 비중 조절
@@ -399,6 +410,11 @@ class FuturesEnv11_train(gym.Env):
                 self.position = position_direction
                 self.size = position_size
                 self.entry_price = current_price
+                do = position_direction
+                self.total_trade += 1
+                self.logger.render(f"스텝: {self.current_step}, 진입 가격: {self.entry_price:.2f}, 포지션: {self.position}")
+                self.logger.render(f"현재 레버리지: {self.leverage:.1f}x, 포지션 크기: {self.size:.2f}")
+                self.logger.render(f"목표 수익: {self.take_profit_threshold*100:.1f}%, 손실 한도: {self.stop_loss_threshold*100:.1f}%")
 
             self.balance_profit_rate = (self.balance - self.initial_balance) / self.initial_balance 
 
@@ -415,12 +431,32 @@ class FuturesEnv11_train(gym.Env):
                 exit_cost = current_price * self.trade_fee
                 self.balance -= exit_cost * self.size
                 self.size = 1e-6
+                do = self.position * 2
                 self.position = FLAT
                 #position_direction = FLAT
                 profit_rate = profit / self.entry_price
                 exit_reward = (profit - exit_cost) / self.entry_price * 100
                 action_reward += -5  # 손절매 실행에 대한 보상 (리스크 관리)
-        
+                self.logger.render(f"스텝: {self.current_step}, 손절 가격: {current_price:.2f}, 포지션: {self.position}")
+                self.logger.render(f"수익: {profit:.2f}, 수익률: {profit_rate*100:.2f}%")
+
+
+
+            elif unrealized_profit > self.take_profit_threshold:
+                profit = self.position * (current_price - self.entry_price)
+                self.balance += profit * self.size
+                exit_cost = current_price * self.trade_fee
+                self.balance -= exit_cost * self.size
+                self.size = 1e-6
+                do = self.position * 2
+                self.position = FLAT
+                profit_rate = profit / self.entry_price
+                exit_reward = (profit - exit_cost) / self.entry_price * 100
+                action_reward += 5  # 익절매 실행에 대한 보상 (리스크 관리)
+                self.success += 1
+                self.logger.render(f"스텝: {self.current_step}, 익절 가격: {current_price:.2f}, 포지션: {self.position}")
+                self.logger.render(f"수익: {profit:.2f}, 수익률: {profit_rate*100:.2f}%")
+
         # 최종 보상 계산 (즉각적인 보상 + 청산 보상)
         total_reward = action_reward + (exit_reward if 'exit_reward' in locals() else position_reward)
         
@@ -453,7 +489,7 @@ class FuturesEnv11_train(gym.Env):
             'balance': self.balance,
             'profit_rate': float((self.balance - self.initial_balance) * 100 / self.initial_balance),
             'trade_success': trade_success,
-            'position': position_direction
+            'position': do
         }
 
         # 학습 종료 시 학습 상태 기록
@@ -482,16 +518,9 @@ class FuturesEnv11_train(gym.Env):
         if self.logger is None:
             return
         # Render the environment to the screen    
-        if self.liquidated:
-            self.logger.error(f"  청산 여부: {'청산됨' if self.liquidated else '정상 종료'}")
-        elif self.clear:
-            self.logger.error(f"  목표 달성 : {'목표 달성' if self.clear else '달성 실패'}")
-        else:
-            self.logger.error(f'  마지막 데이터')
             
         profit = float(self.balance - self.initial_balance)
         profit_rate = float((self.balance - self.initial_balance) * 100 / self.initial_balance)
-        self.logger.render(f'학습 마지막 위치: {self.current_step}')
-        self.logger.render(f'Balance: {float(self.balance):.2f}')
-        self.logger.render(f'Profit: {float(profit):.2f}, Profit Rate: {float(profit_rate):.2f}%')
-        self.logger.render(f'거래 횟수: {self.total_trade}, 성공 횟수: {self.success_episodes}')
+        self.logger.basic(f'Balance: {float(self.balance):.2f}')
+        self.logger.basic(f'Profit: {float(profit):.2f}, Profit Rate: {float(profit_rate):.2f}%')
+        self.logger.basic(f'Success: {self.success}/{self.total_trade}')

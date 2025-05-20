@@ -17,7 +17,7 @@ class Logger:
         self.log_file_path = log_file_path
         
         # 로거 설정
-        self.logger = logging.getLogger(f"{model_name}")
+        self.logger = logging.getLogger(f"system")
         self.logger.setLevel(min(console_level.value, file_level.value))
         
         # 파일 핸들러 설정
@@ -49,6 +49,18 @@ class Logger:
         # 로그 중복 방지
         self.logger.propagate = False
 
+    def setTestLevel(self):
+        """테스트 모드에서 로그 레벨을 INFO로 설정"""
+        self.logger.setLevel(LogLevel.INFO.value)
+        self.file_handler.setLevel(LogLevel.INFO.value)
+        self.console_handler.setLevel(LogLevel.INFO.value)
+
+    def setTrainLevel(self):
+        """학습 모드에서 로그 레벨을 WARNING로 설정"""
+        self.logger.setLevel(LogLevel.WARNING.value)
+        self.file_handler.setLevel(LogLevel.WARNING.value)
+        self.console_handler.setLevel(LogLevel.WARNING.value)
+
     def debug(self, message):
         self.logger.debug(message)
 
@@ -61,6 +73,8 @@ class Logger:
     def warning(self, message):
         self.logger.warning(message)
 
+    def basic(self, message):
+        self.logger.warning(message)
     def render_model_info(self, model_info):
         self.logger.error("########################################################")
         self.logger.error("========== 모델 정보 ==========")
@@ -104,7 +118,7 @@ class Logger:
         self.logger.info(message)
 
     def render_episode_end(self, success_episodes_rate):
-        self.logger.error(f'에피소드 성공률: {success_episodes_rate*100:.2f}%')
+        #self.logger.error(f'에피소드 성공률: {success_episodes_rate*100:.2f}%')
         self.logger.error('========================================================')
 
     def render_training_result(self, result):
@@ -133,3 +147,50 @@ class Logger:
 
     def render_step_state(self, state):
         self.logger.debug(state)
+
+    def render_test_start(self, time):
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        self.logger.error(f'               테스트 시작 {time}')
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+    def render_test_end(self, time):
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        self.logger.error(f'               테스트 종료 {time}')
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+    def render_test_result(self, result):
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        self.logger.error('               테스트 결과')
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        
+        # 환경 데이터 출력
+        self.logger.error('----- 환경 데이터 -----')
+        self.logger.error(f' 에피소드 보상: {result["environment_data"]["episode_reward"]:.2f}')
+        self.logger.error(f' 최종 잔고: {result["environment_data"]["final_balance"]:.2f}')
+        self.logger.error(f' 초기 잔고: {result["environment_data"]["initial_balance"]:.2f}')
+        self.logger.error(f' 총 스텝 수: {result["environment_data"]["total_steps"]}')
+        
+        # 성능 지표 출력
+        self.logger.error('----- 성능 지표 -----')
+        self.logger.error(f' 총 수익: {result["performance_metrics"]["total_profit"]:.2f}')
+        self.logger.error(f' 수익률: {result["performance_metrics"]["profit_rate"]:.2f}%')
+        self.logger.error(f' 수익 거래 수: {result["performance_metrics"]["profitable_trades"]}')
+        self.logger.error(f' 거래당 평균 수익: {result["performance_metrics"]["average_profit_per_trade"]:.2f}')
+        
+        # 거래 통계 출력
+        self.logger.error('----- 거래 통계 -----')
+        self.logger.error(f' 롱 포지션: {result["trading_statistics"]["long_positions"]}')
+        self.logger.error(f' 숏 포지션: {result["trading_statistics"]["short_positions"]}')
+        self.logger.error(f' 중립 포지션: {result["trading_statistics"]["neutral_positions"]}')
+        self.logger.error(f' 연속 승리: {result["trading_statistics"]["consecutive_wins"]}')
+        self.logger.error(f' 연속 손실: {result["trading_statistics"]["consecutive_losses"]}')
+        self.logger.error(f' 평균 보유 시간: {result["trading_statistics"]["average_holding_time"]:.2f}')
+        
+        self.logger.error('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+    def shutdown(self):
+        """로거를 종료하고 모든 핸들러를 제거합니다."""
+        for handler in self.logger.handlers[:]:
+            handler.close()
+            self.logger.removeHandler(handler)
+        logging.shutdown()

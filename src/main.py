@@ -10,4 +10,5 @@ if __name__ == "__main__":
     env_path = data.getCurrentData("BTCUSDT", "30m", limit=336)
     loader = AutoLoader(env_path)
     loader.train()
+    loader.test()
     
