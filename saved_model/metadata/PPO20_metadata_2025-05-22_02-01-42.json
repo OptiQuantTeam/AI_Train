@@ -1,6 +1,6 @@
 {
     "model_name": "PPO20",
-    "end_time": "2025-05-21_03-54-27",
+    "end_time": "2025-05-22_02-01-42",
     "learning_params": {
         "state_dim": 6,
         "action_dim": 3,

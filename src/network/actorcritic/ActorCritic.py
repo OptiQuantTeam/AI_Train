@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-class ActorCritic2(nn.Module):
+class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
-        super(ActorCritic2, self).__init__()
+        super(ActorCritic, self).__init__()
         
         # 공통 특징 추출 레이어 (더 깊고 넓은 구조)
         self.feature_extraction = nn.Sequential(

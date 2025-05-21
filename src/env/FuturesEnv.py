@@ -14,7 +14,7 @@ BUY = 1
 SELL = -1
 HOLD = 0
 
-class FuturesEnv11_train(gym.Env):
+class FuturesEnv(gym.Env):
     def __init__(self, path=None, logger=None):
         '''
         환경의 초기 설정값

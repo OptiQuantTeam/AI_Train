@@ -10,7 +10,7 @@ import json
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-class PPO3:
+class PPO:
     def __init__(
         self, 
         state_dim, 
@@ -27,8 +27,8 @@ class PPO3:
         kl_coef=0.5,     # KL 발산 계수
         device="cuda" if torch.cuda.is_available() else "cpu"
     ):
-        self.actor_critic = AC.ActorCritic2(state_dim, action_dim).to(device)
-        self.indicator_distribution = ID.IndicatorDistribution3(state_dim, action_dim).to(device)
+        self.actor_critic = AC.ActorCritic(state_dim, action_dim).to(device)
+        self.indicator_distribution = ID.IndicatorDistribution(state_dim, action_dim).to(device)
         
         # 액터 옵티마이저
         self.optimizer = optim.Adam([

@@ -1,2 +1,1 @@
-from .ppo3 import PPO3
-
+from .ppo import PPO

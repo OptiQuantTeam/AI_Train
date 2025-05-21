@@ -11,7 +11,7 @@ import glob
 
 class AutoLoader():
     def __init__(self, env_path):
-        self.env = env.FuturesEnv11_train(path=env_path)
+        self.env = env.FuturesEnv(path=env_path)
 
         self.agent, self.model_info, self.learning_info = self._load_model()
         self.logger = Logger(self.agent.model_name, f'saved_model/logs/system.log', console_level=LogLevel.INFO, file_level=LogLevel.INFO)
@@ -104,7 +104,7 @@ class AutoLoader():
 
         self.num_episodes = current_episode + 10
         # PPO 에이전트 재생성
-        ppo_agent = algo.PPO3(
+        ppo_agent = algo.PPO(
             state_dim=state_dim,
             action_dim=action_dim,
             model_name=model_name,
