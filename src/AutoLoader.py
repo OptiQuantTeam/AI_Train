@@ -116,7 +116,7 @@ class AutoLoader():
             epochs=epochs,
             alpha=alpha
         )
-
+        print(model_name)
         # 모델 가중치 로드
         ppo_agent.actor_critic.load_state_dict(model_info['actor_critic_state_dict'])
         
