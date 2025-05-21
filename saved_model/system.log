@@ -1,0 +1,39 @@
+[2025-05-17 09:07:15] === 스크립트 실행 시작 ===
+[2025-05-17 09:07:15] 작업 디렉토리로 이동 완료
+[2025-05-17 09:07:15] 로그 디렉토리 생성 완료
+[2025-05-17 09:07:15] AI 학습 시작
+/workspace/src/AutoLoader.py:64: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model_info = torch.load(model_path, map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+[250517-18:07:19] :: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[250517-18:07:19] ::                학습 시작 2025-05-17_18-07-19
+[250517-18:07:19] :: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[250517-18:07:19] :: ========================================================
+[250517-18:07:19] :: 에피소드 10083
+[250517-18:07:23] ::   마지막 데이터
+[250517-18:07:23] :: 에피소드 성공률: 21.48%
+[250517-18:07:23] :: ========================================================
+[250517-18:07:23] :: ========================================================
+[250517-18:07:23] :: ----- 학습 결과 -----
+[250517-18:07:23] ::  총 에피소드: 10083
+[250517-18:07:23] ::  완료된 에피소드: 2168
+[250517-18:07:23] ::  승률: 21.48%
+[250517-18:07:23] :: ========================================================
+[250517-18:07:23] ::  
+[250517-18:07:23] :: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[250517-18:07:23] ::                학습 종료 2025-05-17_18-07-23
+[250517-18:07:23] :: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[2025-05-17 09:07:24] AI 학습 완료
+[2025-05-17 09:07:24] Git 자격 증명 설정 완료
+[2025-05-17 09:07:24] Git 설정 정보:
+[2025-05-17 09:07:24] - user.name=lucas
+[2025-05-17 09:07:24] - user.email=wymam1@gmail.com
+[2025-05-17 09:07:24] - credential.helper=store
+[2025-05-17 09:07:24] - core.repositoryformatversion=0
+[2025-05-17 09:07:24] - core.filemode=true
+[2025-05-17 09:07:24] - core.bare=false
+[2025-05-17 09:07:24] - core.logallrefupdates=true
+[2025-05-17 09:07:24] - remote.origin.url=https://@github.com/OptiQuantTeam/AI_Train.git
+[2025-05-17 09:07:24] - remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+[2025-05-17 09:07:24] - branch.master.remote=origin
+[2025-05-17 09:07:24] - branch.master.merge=refs/heads/master
+[2025-05-17 09:07:28] AI_Train 레포지토리 변경사항이 성공적으로 업로드되었습니다.

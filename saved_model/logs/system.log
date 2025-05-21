@@ -1,45 +1,7 @@
-[2025-05-21 17:54:35] === 스크립트 실행 시작 ===
-[2025-05-21 17:54:35] 작업 디렉토리로 이동 완료
-[2025-05-21 17:54:35] 로그 디렉토리 생성 완료
-[2025-05-21 17:54:35] AI 학습 시작
-/workspace/src/AutoLoader.py:64: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  model_info = torch.load(model_path, map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
-PPO9
-Traceback (most recent call last):
-  File "/workspace/src/main.py", line 11, in <module>
-    loader = AutoLoader(env_path)
-             ^^^^^^^^^^^^^^^^^^^^
-  File "/workspace/src/AutoLoader.py", line 16, in __init__
-    self.agent, self.model_info, self.learning_info = self._load_model()
-                                                      ^^^^^^^^^^^^^^^^^^
-  File "/workspace/src/AutoLoader.py", line 121, in _load_model
-    ppo_agent.actor_critic.load_state_dict(model_info['actor_critic_state_dict'])
-  File "/opt/conda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 2584, in load_state_dict
-    raise RuntimeError(
-RuntimeError: Error(s) in loading state_dict for ActorCritic:
-	Missing key(s) in state_dict: "feature_extraction.15.weight", "feature_extraction.15.bias". 
-	Unexpected key(s) in state_dict: "feature_extraction.13.weight", "feature_extraction.13.bias", "feature_extraction.13.running_mean", "feature_extraction.13.running_var", "feature_extraction.13.num_batches_tracked", "critic.16.weight", "critic.16.bias", "critic.13.weight", "critic.13.bias", "critic.13.running_mean", "critic.13.running_var", "critic.13.num_batches_tracked". 
-	size mismatch for feature_extraction.0.weight: copying a param with shape torch.Size([512, 5]) from checkpoint, the shape in current model is torch.Size([256, 5]).
-	size mismatch for feature_extraction.0.bias: copying a param with shape torch.Size([512]) from checkpoint, the shape in current model is torch.Size([256]).
-	size mismatch for feature_extraction.1.weight: copying a param with shape torch.Size([512]) from checkpoint, the shape in current model is torch.Size([256]).
-	size mismatch for feature_extraction.1.bias: copying a param with shape torch.Size([512]) from checkpoint, the shape in current model is torch.Size([256]).
-	size mismatch for feature_extraction.1.running_mean: copying a param with shape torch.Size([512]) from checkpoint, the shape in current model is torch.Size([256]).
-	size mismatch for feature_extraction.1.running_var: copying a param with shape torch.Size([512]) from checkpoint, the shape in current model is torch.Size([256]).
-	size mismatch for feature_extraction.4.weight: copying a param with shape torch.Size([256, 512]) from checkpoint, the shape in current model is torch.Size([256, 256]).
-	size mismatch for feature_extraction.8.weight: copying a param with shape torch.Size([256, 256]) from checkpoint, the shape in current model is torch.Size([128, 256]).
-	size mismatch for feature_extraction.8.bias: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([128]).
-	size mismatch for feature_extraction.9.weight: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([128]).
-	size mismatch for feature_extraction.9.bias: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([128]).
-	size mismatch for feature_extraction.9.running_mean: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([128]).
-	size mismatch for feature_extraction.9.running_var: copying a param with shape torch.Size([256]) from checkpoint, the shape in current model is torch.Size([128]).
-	size mismatch for feature_extraction.12.weight: copying a param with shape torch.Size([128, 256]) from checkpoint, the shape in current model is torch.Size([128, 128]).
-	size mismatch for critic.8.weight: copying a param with shape torch.Size([32, 32]) from checkpoint, the shape in current model is torch.Size([16, 32]).
-	size mismatch for critic.8.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
-	size mismatch for critic.9.weight: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
-	size mismatch for critic.9.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
-	size mismatch for critic.9.running_mean: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
-	size mismatch for critic.9.running_var: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
-	size mismatch for critic.12.weight: copying a param with shape torch.Size([16, 32]) from checkpoint, the shape in current model is torch.Size([1, 16]).
-	size mismatch for critic.12.bias: copying a param with shape torch.Size([16]) from checkpoint, the shape in current model is torch.Size([1]).
-[2025-05-21 17:54:39] AI 학습 완료
-[2025-05-21 17:54:39] Git 자격 증명 설정 완료
+[2025-05-21 18:03:15] === 스크립트 실행 시작 ===
+[2025-05-21 18:03:15] 작업 디렉토리로 이동 완료
+[2025-05-21 18:03:15] 로그 디렉토리 생성 완료
+[2025-05-21 18:03:15] AI 학습 시작
+사용 가능한 체크포인트를 찾을 수 없습니다.
+[2025-05-21 18:03:18] AI 학습 완료
+[2025-05-21 18:03:18] Git 자격 증명 설정 완료
