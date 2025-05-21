@@ -42,6 +42,7 @@ git config --global credential.helper store
 echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
 log_message "Git 자격 증명 설정 완료"
 
+cp -r /workspace/saved_model/* /workspace/output/
 
 # AI_Train 레포지토리 변경사항 커밋 및 푸시
 if git add . && git commit -m "Update training results" && git push origin master; then
