@@ -1,9 +1,10 @@
-[2025-05-21 17:41:49] === 스크립트 실행 시작 ===
-[2025-05-21 17:41:49] 작업 디렉토리로 이동 완료
-[2025-05-21 17:41:49] 로그 디렉토리 생성 완료
-[2025-05-21 17:41:49] AI 학습 시작
+[2025-05-21 17:54:35] === 스크립트 실행 시작 ===
+[2025-05-21 17:54:35] 작업 디렉토리로 이동 완료
+[2025-05-21 17:54:35] 로그 디렉토리 생성 완료
+[2025-05-21 17:54:35] AI 학습 시작
 /workspace/src/AutoLoader.py:64: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
   model_info = torch.load(model_path, map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+PPO9
 Traceback (most recent call last):
   File "/workspace/src/main.py", line 11, in <module>
     loader = AutoLoader(env_path)
@@ -40,5 +41,5 @@ RuntimeError: Error(s) in loading state_dict for ActorCritic:
 	size mismatch for critic.9.running_var: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([16]).
 	size mismatch for critic.12.weight: copying a param with shape torch.Size([16, 32]) from checkpoint, the shape in current model is torch.Size([1, 16]).
 	size mismatch for critic.12.bias: copying a param with shape torch.Size([16]) from checkpoint, the shape in current model is torch.Size([1]).
-[2025-05-21 17:41:54] AI 학습 완료
-[2025-05-21 17:41:54] Git 자격 증명 설정 완료
+[2025-05-21 17:54:39] AI 학습 완료
+[2025-05-21 17:54:39] Git 자격 증명 설정 완료
