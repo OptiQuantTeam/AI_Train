@@ -371,13 +371,13 @@ class AutoLoader():
                 os.makedirs(f'output/', exist_ok=True)
                 os.makedirs(f'output/learning_info', exist_ok=True)
                 os.makedirs(f'output/metadata', exist_ok=True)
-                
+                '''
                 self._delete_old_models()
                 self.agent.save_model(f'saved_model/{self.agent.model_name}_{time}.pth')
                 self.agent.save_model(f'output/{self.agent.model_name}_{time}.pth')
                 self.agent.save_learning_state(learning_info, f'saved_model/learning_info/{self.agent.model_name}_{time}.json')
                 self.agent.save_learning_state(learning_info, f'output/learning_info/{self.agent.model_name}_{time}.json')
-                
+                '''
                 
             except Exception as save_error:
                 self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")
@@ -498,13 +498,13 @@ class AutoLoader():
                         }
                     },
                 }
-                
+                '''
                 with open(f'saved_model/metadata/{self.agent.model_name}_metadata_{time}.json', 'w') as f:
                     json.dump(metadata, f, indent=4)
 
                 with open(f'output/metadata/{self.agent.model_name}_metadata_{time}.json', 'w') as f:
                     json.dump(metadata, f, indent=4)
-                
+                '''
             except Exception as save_error:
                 self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")
         

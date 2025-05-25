@@ -19,11 +19,11 @@ def Bollinger(data, window=20, num_std_dev=2):
     
     # 결과 반환
     return pd.DataFrame({
-        'Middle Band': middle_band,
-        'Upper Band': upper_band,
-        'Lower Band': lower_band,
-        'Band Width': band_width,
-        'Band Width Change': band_width_change
+        'bb_middle': middle_band,
+        'bb_upper': upper_band,
+        'bb_lower': lower_band,
+        'bb_width': band_width,
+        'bb_width_change': band_width_change
     }, index=data.index)
 
 # 예제 데이터 사용
