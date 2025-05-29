@@ -66,18 +66,18 @@ class PPO:
     def select_action(self, state):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
         state_id = state[:, 5:]  # 5번 인덱스부터 마지막까지의 데이터만 사용
-        state_ac = state[:, [12,17,18,19,24,27,28,29]]
+        state_ac = state[:, [12,16,17,18,19,24,26,29]]
         
         # 디버깅: 입력값 확인
         #print(f'state_ac shape: {state_ac.shape}')
-        #print(f'state_ac values: {state_ac}')
+        
         
         self.actor_critic.eval()
         with torch.no_grad():
             value, action_probs, action_logits = self.actor_critic(state_ac)
 
             pi_I = self.indicator_distribution(state_id)
-            
+            #print(f'action_probs: {action_probs}, pi_I: {pi_I}')
             if not self.test_mode:
                 # epsilon-greedy 방식으로 랜덤 행동 선택
                 if np.random.random() < self.current_epsilon:
@@ -93,13 +93,13 @@ class PPO:
                 # epsilon 값 감소
                 self.current_epsilon = max(self.epsilon_end, self.current_epsilon * self.epsilon_decay)
             else:
-                print(f'action_probs: {action_probs}')
+                #print(f'action_probs: {action_probs}')
                 # 테스트 모드에서는 가장 높은 확률을 가진 액션 선택
                 ai_idx = torch.argmax(action_probs)
                 ai = ai_idx.float() - 1.0
                 indicator_idx = torch.argmax(pi_I)
                 indicator = indicator_idx.float() - 1.0
-                
+                #print(f'action_probs: {action_probs}, pi_I: {pi_I}')
                 pi = self.alpha * action_probs + (1 - self.alpha) * pi_I
                 action_idx = torch.argmax(pi)
                 action = action_idx.float() - 1.0
@@ -159,7 +159,7 @@ class PPO:
         self.actor_critic.train()
         with torch.no_grad():
             next_state_batch_id = next_state_batch[:, 5:]
-            next_state_batch_ac = next_state_batch[:, [12,17,18,19,24,27,28,29]]
+            next_state_batch_ac = next_state_batch[:, [12,16,17,18,19,24,26,29]]
             next_value = self.actor_critic(next_state_batch_ac)[0]  # value는 첫 번째 반환값
             next_value = next_value.squeeze()
             
@@ -203,7 +203,7 @@ class PPO:
                 # 현재 미니배치
                 state = state_batch[idx]
                 state_id = state[:, 5:]  # 5번 인덱스부터 마지막까지의 데이터만 사용
-                state_ac = state[:, [12,17,18,19,24,27,28,29]]
+                state_ac = state[:, [12,16,17,18,19,24,26,29]]
                 action = action_batch[idx]
                 advantage = advantages[idx]
                 return_ = returns[idx]
@@ -217,10 +217,7 @@ class PPO:
                 # argmax로 행동 선택
                 action_idx = torch.argmax(pi, dim=1)
                 new_action = action_idx.float() - 1.0
-                new_log_prob = torch.log(pi[0][action_idx])
-                
-                # KL 발산 계산
-                kl_divergence = (new_log_prob - old_log_prob).mean()
+                new_log_prob = torch.log(pi[0][action_idx])                
                 
                 # PPO 비율 계산
                 ratio = torch.exp(new_log_prob - old_log_prob)
@@ -233,11 +230,12 @@ class PPO:
                 surr2 = torch.clamp(ratio, 1-self.epsilon, 1+self.epsilon) * advantage
                 actor_loss = -torch.min(surr1, surr2).mean()
 
-                
+                value = value.squeeze(-1)
+                value = torch.clamp(value, -10.0, 10.0)
+
                 # 2. Critic Loss - Huber Loss
-                #value = value.squeeze(-1)
-                #critic_loss = torch.clamp((value - return_)**2, max=5.0).mean()
-                critic_loss = nn.SmoothL1Loss()(value, return_)
+                criterion = nn.HuberLoss(delta=1.0)
+                critic_loss = criterion(value, return_)
                 
                 # 3. 엔트로피 손실 (탐색을 위한)
                 entropy_loss = -self.entropy_coef * (-(pi * torch.log(pi + 1e-10)).sum(dim=1)).mean()
@@ -395,7 +393,8 @@ class PPO:
         
         # 1. Entropy Loss 라인 차트
         ax1 = fig.add_subplot(gs[0, 0])
-        ax1.plot(self.episode_entropy_losses, color='green', alpha=0.5, label='Entropy Loss')
+        ax1.plot(self.episode_entropy_losses, color='green', alpha=0.3, label='Entropy Loss')
+
         # 추세선 추가
         window_size = 100
         if len(self.episode_entropy_losses) >= window_size:
@@ -409,7 +408,7 @@ class PPO:
         
         # 2. Total Loss 라인 차트
         ax2 = fig.add_subplot(gs[0, 1])
-        ax2.plot(self.episode_total_losses, color='purple', alpha=0.5, label='Total Loss')
+        ax2.plot(self.episode_total_losses, color='purple', alpha=0.3, label='Total Loss')
         # 추세선 추가
         if len(self.episode_total_losses) >= window_size:
             rolling_mean = np.convolve(self.episode_total_losses, np.ones(window_size)/window_size, mode='valid')
@@ -422,7 +421,7 @@ class PPO:
         
         # 3. Policy Loss 라인 차트
         ax3 = fig.add_subplot(gs[1, :])
-        ax3.plot(self.episode_actor_losses, color='blue', alpha=0.5, label='Policy Loss')
+        ax3.plot(self.episode_actor_losses, color='blue', alpha=0.3, label='Policy Loss')
         # 추세선 추가
         window_size = 100
         if len(self.episode_actor_losses) >= window_size:
@@ -436,7 +435,7 @@ class PPO:
         
         # 4. Value Loss 라인 차트
         ax4 = fig.add_subplot(gs[2, :])
-        ax4.plot(self.episode_critic_losses, color='red', alpha=0.5, label='Value Loss')
+        ax4.plot(self.episode_critic_losses, color='red', alpha=0.3, label='Value Loss')
         # 추세선 추가
         if len(self.episode_critic_losses) >= window_size:
             rolling_mean = np.convolve(self.episode_critic_losses, np.ones(window_size)/window_size, mode='valid')

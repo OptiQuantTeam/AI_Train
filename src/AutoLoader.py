@@ -102,7 +102,7 @@ class AutoLoader():
         step_num_history = training_results.get('step_num_history', [])
 
 
-        self.num_episodes = current_episode + 10
+        self.num_episodes = current_episode + 100
         # PPO 에이전트 재생성
         ppo_agent = algo.PPO(
             state_dim=state_dim,
@@ -371,13 +371,13 @@ class AutoLoader():
                 os.makedirs(f'output/', exist_ok=True)
                 os.makedirs(f'output/learning_info', exist_ok=True)
                 os.makedirs(f'output/metadata', exist_ok=True)
-                '''
+                
                 self._delete_old_models()
                 self.agent.save_model(f'saved_model/{self.agent.model_name}_{time}.pth')
                 self.agent.save_model(f'output/{self.agent.model_name}_{time}.pth')
                 self.agent.save_learning_state(learning_info, f'saved_model/learning_info/{self.agent.model_name}_{time}.json')
                 self.agent.save_learning_state(learning_info, f'output/learning_info/{self.agent.model_name}_{time}.json')
-                '''
+                
                 
             except Exception as save_error:
                 self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")

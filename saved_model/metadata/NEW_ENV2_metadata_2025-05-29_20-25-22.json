@@ -1,0 +1,41 @@
+{
+    "model_name": "NEW_ENV2",
+    "end_time": "2025-05-29_20-25-22",
+    "learning_params": {
+        "state_dim": 8,
+        "action_dim": 3,
+        "gamma": 0.9,
+        "epsilon": 0.2,
+        "epochs": 4,
+        "lr_actor": 0.0001,
+        "lr_critic": 1e-06,
+        "batch_size": 32,
+        "alpha": 0.4,
+        "device": "cuda"
+    },
+    "performance_metrics": {
+        "total_profit": -444997.53605044633,
+        "profit_rate": -44.49975360504463,
+        "profitable_trades": 21,
+        "average_profit_per_trade": -62.94165997884672
+    },
+    "trading_statistics": {
+        "long_positions": 29,
+        "short_positions": 46,
+        "neutral_positions": 6921,
+        "consecutive_wins": 1,
+        "consecutive_losses": 1,
+        "average_profit_rate": -0.6910511296952808,
+        "max_profit_rate": 7.504217867818001,
+        "average_profit": -643.0682432432427,
+        "max_profit": 7061.0
+    },
+    "environment_info": {
+        "data_path": "data/preprocess/BTCUSDT/BTCUSDT-30m-REAL_FINAL_TEST_2025.csv",
+        "total_data_length": 7070,
+        "training_period": {
+            "start": "0",
+            "end": "7069"
+        }
+    }
+}

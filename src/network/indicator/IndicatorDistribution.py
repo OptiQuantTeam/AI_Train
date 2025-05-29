@@ -41,7 +41,7 @@ class IndicatorDistribution(nn.Module):
         batch_size = state.shape[0]
         
         # 1) 기본 확률 정의 - 더 균형잡힌 분포로 수정
-        default_probs = torch.tensor([0.4, 0.2, 0.4], device=state.device)  # SHORT, HOLD, LONG
+        default_probs = torch.tensor([0.33, 0.34, 0.33], device=state.device)  # SHORT, HOLD, LONG
         default_logits = default_probs.unsqueeze(0).expand(batch_size, -1)
         
         # 2) 하이킨 아시 캔들 분석 - 추세 추종 강화
@@ -52,7 +52,6 @@ class IndicatorDistribution(nn.Module):
         ha_body = state[:, 4]     # ha_body
         ha_lower_wick = state[:, 5]  # ha_lower_wick
         ha_upper_wick = state[:, 6]  # ha_upper_wick
-        
         
         # 현재와 이전 캔들의 관계
         high_diff = state[:, 8]
@@ -139,7 +138,7 @@ class IndicatorDistribution(nn.Module):
         # 6) 통합 신호 생성 - 추세 추종 강화
         ha_ma_stoch_bb_signal = torch.zeros((batch_size, self.action_dim), device=state.device)
         
-        # 롱 진입 신호 - 추세 추종 강화
+        # 롱 진입 신호
         long_signal = (
             (torch.logical_and(ha_signal_tensor[:, 2] > 0, ma_slope > 0)) &  # 하이킨 아시 + 상승 추세
             (
@@ -149,7 +148,7 @@ class IndicatorDistribution(nn.Module):
             )
         )
         
-        # 숏 진입 신호 - 추세 추종 강화
+        # 숏 진입 신호
         short_signal = (
             (torch.logical_and(ha_signal_tensor[:, 0] > 0, ma_slope < 0)) &  # 하이킨 아시 + 하락 추세
             (
@@ -173,8 +172,7 @@ class IndicatorDistribution(nn.Module):
         
         # 8) 최종 확률 분포 계산
         mixed_logits = default_logits + combined_signal
-        final_probs = F.softmax(mixed_logits / 0.5, dim=-1)
-        
+        final_probs = F.softmax(mixed_logits, dim=-1)
         
         return final_probs
         
