@@ -498,13 +498,13 @@ class AutoLoader():
                         }
                     },
                 }
-                '''
+                
                 with open(f'saved_model/metadata/{self.agent.model_name}_metadata_{time}.json', 'w') as f:
                     json.dump(metadata, f, indent=4)
 
                 with open(f'output/metadata/{self.agent.model_name}_metadata_{time}.json', 'w') as f:
                     json.dump(metadata, f, indent=4)
-                '''
+                
             except Exception as save_error:
                 self.logger.error(f" <<체크포인트 저장 중 에러 발생: {str(save_error)}>>")
         
