@@ -14,21 +14,21 @@
         "device": "cuda"
     },
     "performance_metrics": {
-        "total_profit": -444997.53605044633,
-        "profit_rate": -44.49975360504463,
+        "total_profit": 495786.332153691,
+        "profit_rate": 49.5786332153691,
         "profitable_trades": 21,
-        "average_profit_per_trade": -62.94165997884672
+        "average_profit_per_trade": 70.12536522683041
     },
     "trading_statistics": {
-        "long_positions": 29,
-        "short_positions": 46,
-        "neutral_positions": 6921,
+        "long_positions": 20,
+        "short_positions": 24,
+        "neutral_positions": 6983,
         "consecutive_wins": 1,
         "consecutive_losses": 1,
-        "average_profit_rate": -0.6910511296952808,
-        "max_profit_rate": 7.504217867818001,
-        "average_profit": -643.0682432432427,
-        "max_profit": 7061.0
+        "average_profit_rate": 1.080061111826803,
+        "max_profit_rate": 10.39073469187284,
+        "average_profit": 1003.4666395348853,
+        "max_profit": 10239.350000000006
     },
     "environment_info": {
         "data_path": "data/preprocess/BTCUSDT/BTCUSDT-30m-REAL_FINAL_TEST_2025.csv",
