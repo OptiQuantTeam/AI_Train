@@ -1,6 +1,6 @@
 {
     "model_name": "NEW_ENV2",
-    "end_time": "2025-05-30_02-29-00",
+    "end_time": "2025-05-30_02-39-43",
     "learning_params": {
         "state_dim": 8,
         "action_dim": 3,
@@ -14,10 +14,10 @@
         "device": "cuda"
     },
     "performance_metrics": {
-        "total_profit": 39549.05310567771,
-        "profit_rate": 3.954905310567771,
+        "total_profit": 43800.55308908515,
+        "profit_rate": 4.380055308908515,
         "profitable_trades": 1,
-        "average_profit_per_trade": 127.57759066347649
+        "average_profit_per_trade": 141.29210673898436
     },
     "trading_statistics": {
         "long_positions": 0,
